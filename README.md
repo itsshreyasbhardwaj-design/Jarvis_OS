@@ -1,187 +1,168 @@
+<div align="center">
+
 # JARVIS OS
 
-> *"Sometimes you gotta run before you can walk."* — Tony Stark
+**A local-first, voice-controlled AI desktop assistant for macOS.**
 
-A production-grade, voice-controlled AI personal desktop assistant built on clean architecture principles. JARVIS is modular, extensible, and designed to execute complex multi-step tasks with user-approval gates at every sensitive action.
+Runs a real language model **entirely on your machine** — no API key, no cloud, no cost — and can see, hear, and act on your desktop.
 
----
+![Python](https://img.shields.io/badge/python-3.12%2B-3776AB?logo=python&logoColor=white)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Platform](https://img.shields.io/badge/platform-macOS%20(Apple%20Silicon)-000000?logo=apple)
+![Tests](https://img.shields.io/badge/tests-90%20passing-brightgreen)
+![Lint](https://img.shields.io/badge/lint-ruff-261230)
 
-## ✨ Features (Phase 1 Foundation)
-
-| Layer | Capability |
-|-------|-----------|
-| **AI** | Claude, OpenAI, Gemini, Local LLM — swap via config |
-| **Voice** | Wake word → STT → AI → TTS pipeline |
-| **Memory** | Short-term, long-term (SQLite/FTS5), vector store (ChromaDB) |
-| **Desktop** | File navigation, keyboard/mouse, screen capture + OCR |
-| **Browser** | Playwright-based search, extraction, automation |
-| **Security** | Permission gates, audit logs, OS keychain credentials |
-| **Plugins** | Dynamic plugin framework with isolated execution |
-| **UI** | CustomTkinter dark theme with purple accent |
+</div>
 
 ---
 
-## 🏗️ Architecture
+## What it is
+
+JARVIS OS is an AI assistant you talk to in your browser. You speak; it transcribes, reasons, replies out loud, and — when you ask it to — **acts on your Mac**: opens apps and folders, searches the web, controls media and volume, takes screenshots, reads files, and more.
+
+Its defining trait is that it is **local-first**. The reasoning runs on a language model executing on-device via Apple's MLX framework, so it works with **no API key and no internet** for inference. When a cloud key *is* available it uses it; when it isn't, it gracefully falls back to the local model, then to deterministic responses — the assistant never simply stops working.
+
+> A personal engineering project exploring on-device AI, clean architecture, and secure desktop automation. Not affiliated with Marvel.
+
+---
+
+## Why it's interesting (the engineering)
+
+- **Provider-agnostic reasoning with graceful degradation.** A single `LLMRouter` hides every backend behind one interface and degrades cleanly: **cloud → on-device → offline**. No component is coupled to a specific AI provider.
+- **Real voice with zero native dependencies.** Rather than ship a heavy Whisper/Qt stack, the web console uses **browser-native Web Speech (STT + TTS)** and **Web Audio** (for two-clap wake) — so it runs on an 8 GB laptop with nothing extra to install.
+- **Natural language → real actions, safely.** Spoken commands route to **permission-gated tools**; risky actions pass through a `PermissionManager` with typed risk levels and an audit trail.
+- **Event-driven, testable core.** An async `EventBus`, a `ServiceRegistry` DI container, and a `LifecycleManager` keep modules decoupled and independently testable. **90 tests** cover the critical paths.
+
+---
+
+## Features
+
+**Working today**
+- 🧠 On-device LLM (Llama 3.2 via MLX) with cloud/offline fallback — no API key required
+- 🎙️ Browser voice: speak to it, it speaks back; **two-clap wake**
+- 💻 macOS control: open apps / folders / websites, set volume, control music, lock screen, take screenshots, type text, run AppleScript
+- 🔎 Keyless web search (DuckDuckGo → Wikipedia)
+- 🗂️ File tools (list / read) with credential-directory guards
+- 💾 Persistent memory (working + SQLite episodic) that recalls across turns
+- 🖥️ Arc-reactor HUD web console (FastAPI) with a live audio-reactive visualizer
+
+**Roadmap**
+- 🔊 Native always-on wake word + streaming STT (sherpa-onnx / RealtimeSTT)
+- 🧩 Semantic long-term memory (LanceDB vector store — scaffolded)
+- 🤖 LLM-driven autonomous tool calling for multi-step tasks
+- 🪟 Native desktop UI (PySide6) and menu-bar presence
+- 🧠 Larger local models & hot-swapping
+
+---
+
+## Architecture
+
+```mermaid
+flowchart LR
+    UI["Web Console<br/>voice · HUD"] -->|/api/chat| API[FastAPI]
+    API --> AGENT["JarvisAgent<br/>intent routing"]
+    AGENT -->|command| TOOLS["Tool Executor<br/>permission-gated"]
+    AGENT -->|conversation| ENGINE["Conversation Engine"]
+    ENGINE --> ROUTER["LLM Router"]
+    ROUTER -->|1 · cloud key| CLOUD["Claude / litellm"]
+    ROUTER -->|2 · on-device| MLX["Apple MLX · Llama 3.2"]
+    ROUTER -->|3 · fallback| OFF["Offline responder"]
+    ENGINE --> MEM["Memory Manager<br/>working + SQLite"]
+    TOOLS --> MAC["macOS<br/>open · AppleScript"]
+```
+
+The system is wired through an async **EventBus** and a **ServiceRegistry** (dependency injection), started in dependency order by a **LifecycleManager** — so subsystems stay decoupled and swappable.
+
+See [`docs/`](docs/) for the deeper design write-ups.
+
+---
+
+## Tech stack
+
+| Layer | Choice |
+|---|---|
+| Language | Python 3.12, async-first, fully type-hinted |
+| On-device LLM | Apple **MLX** (`mlx-lm`) |
+| LLM routing | `litellm` (cloud) + local MLX + offline |
+| Memory | `aiosqlite` (episodic) · in-process working memory |
+| Web backend | **FastAPI** + `uvicorn` |
+| Voice / UI | Browser Web Speech & Web Audio APIs + a hand-built HUD |
+| Desktop control | macOS `open` + AppleScript (`osascript`) |
+| Tooling | `uv`, `ruff`, `pytest` |
+
+---
+
+## Quick start (macOS, Apple Silicon)
+
+```bash
+# 1. Get uv (a fast Python toolchain) if you don't have it
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# 2. Set up the environment
+cd jarvis-os
+uv venv .venv --python 3.12
+uv pip install --python .venv/bin/python \
+  fastapi "uvicorn[standard]" mlx-lm litellm aiosqlite \
+  pydantic pydantic-settings python-dotenv loguru tenacity httpx psutil typer rich
+
+# 3. Launch the console
+PYTHONPATH=src .venv/bin/python -m jarvis.cli console
+```
+
+Then open **http://127.0.0.1:8765**, click **Initialize**, allow the microphone, and start talking.
+The first message downloads the local model (~0.7 GB) once; after that it runs fully offline.
+
+*Optional — smarter cloud brain:* put `ANTHROPIC_API_KEY=...` in `.env` and it auto-prefers Claude.
+
+---
+
+## Usage
+
+Say (or type) things like:
+
+```
+what time is it
+open my Downloads
+launch Spotify   ·   open apple.com   ·   pause the music
+set the volume to 30
+take a screenshot   ·   lock my screen
+search for the James Webb telescope
+what did I say earlier?
+```
+
+Everything above runs locally, with no API key.
+
+---
+
+## Project layout
 
 ```
 jarvis-os/
 ├── src/jarvis/
-│   ├── core/          # Event bus, DI container, lifecycle
-│   ├── ai/            # Provider abstraction, context, tool execution
-│   ├── voice/         # Wake word, STT, TTS, audio pipeline
-│   ├── memory/        # Short/long-term memory, vector store
-│   ├── desktop/       # File system, keyboard, screen, apps
-│   ├── browser/       # Playwright web automation
-│   ├── security/      # Permissions, audit, credentials
-│   ├── plugins/       # Plugin framework
-│   ├── ui/            # Desktop UI + design system
-│   ├── config/        # Pydantic settings
-│   └── logging/       # Loguru structured logging
-├── tests/             # Pytest test suite
-├── docs/              # Architecture + development docs
-├── scripts/           # Setup scripts
-└── data/              # Runtime data (gitignored)
+│   ├── core/          # EventBus, ServiceRegistry (DI), LifecycleManager
+│   ├── ai/            # LLM router, conversation engine, agent, tools
+│   ├── memory/        # working + SQLite episodic memory
+│   ├── integrations/  # web search, macOS desktop control
+│   ├── web/           # FastAPI backend + arc-reactor HUD
+│   ├── security/      # permissions, audit log, credential store
+│   └── config/        # Pydantic settings
+├── tests/             # 90 unit/integration tests
+├── docs/              # architecture & design docs
+└── scripts/           # smoke test, boot check, setup
 ```
 
 ---
 
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Python 3.11+
-- [ffmpeg](https://ffmpeg.org/) (for voice)
-- [Tesseract](https://tesseract-ocr.github.io/) (for OCR)
-- An API key for at least one AI provider
-
-### 1. Clone and set up
+## Testing
 
 ```bash
-git clone https://github.com/your-org/jarvis-os.git
-cd jarvis-os
-bash scripts/setup.sh
-```
-
-### 2. Configure
-
-```bash
-cp .env.example .env
-# Edit .env — add your ANTHROPIC_API_KEY (or OPENAI_API_KEY, etc.)
-nano .env
-```
-
-### 3. Run
-
-```bash
-source .venv/bin/activate
-make dev          # Development mode with verbose logging
-# or
-jarvis start      # Production mode
+PYTHONPATH=src .venv/bin/python -m pytest tests/     # 90 passing
+.venv/bin/ruff check src/                            # lint
+.venv/bin/python scripts/smoke_test.py               # end-to-end boot + one turn
 ```
 
 ---
 
-## ⚙️ Configuration
+## License
 
-All configuration lives in `.env`. Key variables:
-
-```dotenv
-JARVIS_AI_PROVIDER=claude          # claude | openai | gemini | local
-ANTHROPIC_API_KEY=sk-ant-...
-JARVIS_SAFE_MODE=true              # Blocks HIGH/CRITICAL risk actions
-JARVIS_WAKE_WORD=jarvis
-JARVIS_ENV=development             # development | production
-```
-
-See `.env.example` for the full list with documentation.
-
----
-
-## 🛠️ Development
-
-```bash
-make test          # Run all tests
-make test-unit     # Unit tests only (fast)
-make test-cov      # Tests + coverage report
-make lint          # Ruff linter
-make format        # Auto-format code
-make type-check    # mypy strict check
-make check         # All quality checks
-```
-
-### Adding a Plugin
-
-```python
-from jarvis.plugins.base import JarvisPlugin, PluginMetadata, PluginContext
-
-class Plugin(JarvisPlugin):
-    @property
-    def metadata(self) -> PluginMetadata:
-        return PluginMetadata(
-            name="my-plugin",
-            version="1.0.0",
-            description="Does something useful",
-            author="Your Name",
-        )
-
-    async def start(self, context: PluginContext) -> None:
-        context.tool_executor.register(
-            name="my_tool",
-            description="Does something",
-            parameters={"input": {"type": "string"}},
-            required=["input"],
-        )(self._my_tool)
-
-    async def _my_tool(self, input: str) -> str:
-        return f"Result: {input}"
-
-    async def stop(self) -> None:
-        pass
-```
-
-See [Plugin Development Guide](docs/plugins/plugin-development.md) for the full API.
-
----
-
-## 🔒 Security Model
-
-- All actions above `READ_ONLY` risk level require explicit user confirmation in `safe_mode=true`
-- `HIGH` and `CRITICAL` actions are blocked entirely in safe mode
-- Every action is written to an append-only audit log
-- Credentials are stored in the OS keychain (never in `.env` for production)
-- Forbidden paths (e.g. `/System`, `/etc`) cannot be accessed regardless of permissions
-
----
-
-## 📚 Documentation
-
-| Document | Description |
-|----------|-------------|
-| [Architecture Overview](docs/architecture/system-overview.md) | System design and component relationships |
-| [Development Setup](docs/development/setup.md) | Full setup guide |
-| [Contributing](docs/development/contributing.md) | Contribution guidelines |
-| [Plugin Development](docs/plugins/plugin-development.md) | Build and publish plugins |
-| [Security Model](docs/security/security-model.md) | Permission system deep-dive |
-| [Roadmap](docs/roadmap/ROADMAP.md) | What's coming next |
-
----
-
-## 🗺️ Roadmap
-
-**Phase 1 (Current):** Foundation — event bus, DI, AI providers, voice pipeline, memory, desktop automation, browser, security, plugins, UI, logging, testing.
-
-**Phase 2:** Feature depth — calendar, email, web research, code execution, file summarisation, notification centre.
-
-**Phase 3:** Intelligence — long-running tasks, learning user preferences, multi-agent coordination.
-
-**Phase 4:** Distribution — packaging, auto-update, marketplace plugins, cross-platform.
-
----
-
-## 📄 License
-
-MIT License — see [LICENSE](LICENSE) for details.
-
----
-
-*Built with ❤️ and ambition. JARVIS OS is a personal project, not affiliated with Marvel or Iron Man.*
+[MIT](LICENSE) © 2026 Shreyas Bhardwaj
