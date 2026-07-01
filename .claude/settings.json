@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3:*)",
+      "Bash(pytest:*)",
+      "Bash(ruff:*)",
+      "Bash(mypy:*)",
+      "Bash(black:*)",
+      "Bash(make:*)",
+      "Bash(pip:*)",
+      "Bash(brew:*)",
+      "Bash(git:*)",
+      "Read(**)",
+      "Write(src/**)",
+      "Write(tests/**)",
+      "Write(docs/**)",
+      "Write(scripts/**)",
+      "Edit(src/**)",
+      "Edit(tests/**)",
+      "Edit(docs/**)",
+      "Edit(pyproject.toml)",
+      "Edit(CLAUDE.md)",
+      "Edit(Makefile)",
+      "Edit(.env.example)"
+    ],
+    "deny": [
+      "Bash(rm -rf:*)",
+      "Write(.env)",
+      "Write(**/.ssh/**)",
+      "Write(**/secrets/**)"
+    ]
+  }
+}

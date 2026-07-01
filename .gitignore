@@ -1,0 +1,140 @@
+# ==============================================================================
+# JARVIS OS — .gitignore
+# ==============================================================================
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# --- Virtual Environments ---
+.venv/
+venv/
+ENV/
+env/
+.env/
+env.bak/
+venv.bak/
+
+# --- Environment Files (NEVER commit secrets) ---
+.env
+.env.local
+.env.*.local
+
+# --- Testing & Coverage ---
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+*.py,cover
+
+# --- Type Checking ---
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pytype/
+
+# --- Linting ---
+.ruff_cache/
+
+# --- IDE / Editor ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+*~
+.DS_Store
+Thumbs.db
+
+# --- Data Directories (user-specific, often large) ---
+data/logs/*.log
+data/logs/*.jsonl
+data/memory/long_term/*.db
+data/memory/vector_store/
+data/models/
+data/audit/*.jsonl
+
+# --- Keep data directory structure ---
+!data/logs/.gitkeep
+!data/models/.gitkeep
+!data/memory/short_term/.gitkeep
+!data/memory/long_term/.gitkeep
+!data/memory/vector_store/.gitkeep
+!data/audit/.gitkeep
+!data/plugins/.gitkeep
+
+# --- User Plugins (installed locally) ---
+plugins/*/
+!plugins/.gitkeep
+
+# --- Build Outputs ---
+htmlcov/
+*.html
+!docs/**/*.html
+
+# --- OS Files ---
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# --- Temporary Files ---
+*.tmp
+*.temp
+*.bak
+*.orig
+*.log
+
+# --- Secrets / Keys ---
+*.pem
+*.key
+*.p12
+*.cert
+*.crt
+secrets/
+
+# --- ChromaDB ---
+chroma_db/
+*.chroma
+
+# --- FAISS ---
+*.faiss
+*.index
+
+# --- Runtime data & caches (added for portfolio hygiene) ---
+data/
+.DS_Store
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+htmlcov/
+.coverage
+*.log
+JARVIS-screenshot-*.png

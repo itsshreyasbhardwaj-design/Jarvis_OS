@@ -1,0 +1,395 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jarvis-os"
+version = "0.1.0"
+description = "JARVIS OS — Production-grade AI personal desktop assistant"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Shrey", email = "shreyas.b.hlc0004@gmail.com" }]
+keywords = ["ai", "assistant", "desktop", "voice", "automation"]
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Operating System :: MacOS",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Topic :: Desktop Environment",
+]
+dependencies = [
+  # -----------------------------------------------------------------------
+  # AI Providers & Orchestration
+  # -----------------------------------------------------------------------
+  # anthropic: Claude SDK — primary AI provider (v0.112.0+)
+  "anthropic>=0.112.0",
+  # openai: GPT-4o / o1 support
+  "openai>=1.30.0",
+  # google-generativeai: Gemini support
+  "google-generativeai>=0.5.0",
+  # litellm: Unified LLM router — swap Claude/GPT/Ollama/MLX via config
+  # ★ 40k GitHub stars | Used at Netflix, Rocket Money
+  "litellm>=1.40.0",
+  # instructor: Typed Pydantic outputs from any LLM with auto-retry
+  # ★ 11k GitHub stars | 3M+ monthly downloads
+  "instructor>=1.3.0",
+
+  # -----------------------------------------------------------------------
+  # Voice Pipeline
+  # -----------------------------------------------------------------------
+  # RealtimeSTT: Streaming STT with VAD — wraps whisper.cpp for Metal acceleration
+  # ★ 9.8k GitHub stars | Replaces faster-whisper (no Metal GPU support)
+  "RealtimeSTT>=0.3.104",
+  # RealtimeTTS: Engine abstraction — feeds LLM token streams into TTS
+  # ★ 3.9k GitHub stars | Replaces archived coqui-ai/TTS
+  "RealtimeTTS>=0.4.0",
+  # kokoro: Local TTS model — 82M params, Apache-2.0, ~150ms latency
+  # ★ 10k GitHub stars | Near-ElevenLabs quality, runs on Apple MPS
+  "kokoro>=0.9.0",
+  # edge-tts: Online TTS fallback — Microsoft neural voices, no API key
+  # ★ 10.2k GitHub stars | 400+ voices, streams natively
+  "edge-tts>=6.1.0",
+  # sherpa-onnx: Wake word detection — Apache-2.0, CoreML backend on Apple Silicon
+  # ★ 13.1k GitHub stars | Replaces openwakeword (CC BY-NC-SA license risk)
+  "sherpa-onnx>=1.10.0",
+  # sounddevice: Low-latency audio I/O — PortAudio, non-blocking callbacks
+  # Replaces pyaudio as primary audio library (cleaner API, lower latency)
+  "sounddevice>=0.4.6",
+  "soundfile>=0.12.1",
+  "noisereduce>=3.0.0",
+  "numpy>=1.26.0",
+
+  # -----------------------------------------------------------------------
+  # Memory & Vector Storage
+  # -----------------------------------------------------------------------
+  # lancedb: Embedded vector DB — Rust-backed HNSW, hybrid vector+FTS search
+  # ★ 10.5k GitHub stars | Replaces chromadb (faster, no server, native persistence)
+  "lancedb>=0.10.0",
+  # fastembed: ONNX embeddings — 80 MB RAM, no PyTorch dep, fast cold start
+  # ★ 3k GitHub stars | Replaces sentence-transformers as default embedder
+  "fastembed>=0.3.0",
+  # aiosqlite: Async SQLite — used for conversation history, preferences, audit log
+  "aiosqlite>=0.20.0",
+
+  # -----------------------------------------------------------------------
+  # Desktop Automation
+  # -----------------------------------------------------------------------
+  # atomacos: macOS Accessibility API — click by label/role, always works
+  # ★ Actively maintained by OpenAdaptAI | Replaces pyautogui (unreliable on macOS)
+  "atomacos>=1.0.0",
+  # pynput: Keyboard/mouse synthesis + monitoring via macOS CGEvent
+  # ★ 2.2k GitHub stars | Complements atomacos
+  "pynput>=1.7.6",
+  # mss: Fast multi-monitor screen capture — 30+ FPS at minimal CPU
+  # ★ Replaces Pillow.ImageGrab for all screen capture
+  "mss>=9.0.0",
+  # pyobjc-framework-Vision: Apple Vision OCR — Neural Engine, zero download
+  # Best OCR for macOS screenshots; same engine as iOS Live Text
+  "pyobjc-framework-Vision>=10.3.0",
+  # Pillow: Image processing (still needed for manipulation, not just capture)
+  "Pillow>=10.3.0",
+  # psutil: Process management, system stats
+  "psutil>=5.9.8",
+
+  # -----------------------------------------------------------------------
+  # Browser Automation
+  # -----------------------------------------------------------------------
+  "playwright>=1.44.0",
+  "beautifulsoup4>=4.12.3",
+  "lxml>=5.2.0",
+
+  # -----------------------------------------------------------------------
+  # Security
+  # -----------------------------------------------------------------------
+  # keyring: OS keychain (macOS Keychain, Windows Credential Manager)
+  "keyring>=25.2.0",
+  # cryptography: Encrypt/decrypt, key derivation
+  "cryptography>=42.0.0",
+
+  # -----------------------------------------------------------------------
+  # Configuration
+  # -----------------------------------------------------------------------
+  "pydantic>=2.7.0",
+  "pydantic-settings>=2.3.0",
+  "python-dotenv>=1.0.1",
+  "PyYAML>=6.0.1",
+
+  # -----------------------------------------------------------------------
+  # UI — PySide6 (Qt6) Stack
+  # -----------------------------------------------------------------------
+  # PySide6: Qt6 Python bindings — LGPL, native macOS dark mode, universal2 wheels
+  # ★ Replaces customtkinter (no GPU animation, Tk-based, cannot do 60fps waveforms)
+  "PySide6>=6.7.0",
+  # pyqtgraph: OpenGL real-time visualization — embedded in Qt widget tree
+  # ★ 4.3k GitHub stars | Powers real-time voice waveform at 60fps
+  "pyqtgraph>=0.13.0",
+  # qasync: Merge asyncio event loop into Qt — one line of setup
+  "qasync>=0.27.0",
+  # pyqtdarktheme: Polished dark stylesheet that syncs with macOS accent color
+  "pyqtdarktheme>=2.1.0",
+
+  # -----------------------------------------------------------------------
+  # System Integration (macOS)
+  # -----------------------------------------------------------------------
+  # rumps: macOS menu-bar app + native notifications
+  # ★ 800 GitHub stars | Replaces pync (dead since 2021)
+  "rumps>=0.4.0",
+
+  # -----------------------------------------------------------------------
+  # Logging
+  # -----------------------------------------------------------------------
+  "loguru>=0.7.2",
+  "rich>=13.7.1",
+
+  # -----------------------------------------------------------------------
+  # HTTP / Async
+  # -----------------------------------------------------------------------
+  # httpx: Async HTTP client — HTTP/2, sync+async, best DX
+  "httpx>=0.27.0",
+  "aiofiles>=23.2.1",
+
+  # -----------------------------------------------------------------------
+  # CLI
+  # -----------------------------------------------------------------------
+  # typer: Type-hint CLI — vendors click, drop-in upgrade, better DX
+  # ★ 18.3k GitHub stars | Replaces click (still available via typer internals)
+  "typer>=0.12.0",
+
+  # -----------------------------------------------------------------------
+  # Utilities
+  # -----------------------------------------------------------------------
+  # apscheduler: Async-native task scheduler — cron, interval, one-shot
+  # ★ 6.6k GitHub stars | Replaces schedule (synchronous, incompatible with asyncio)
+  "apscheduler>=4.0.0",
+  "tenacity>=8.3.0",
+  "platformdirs>=4.2.2",
+  "python-dateutil>=2.9.0",
+]
+
+[project.optional-dependencies]
+# Apple Silicon native inference (M1/M2/M3/M4 only)
+apple-silicon = [
+  # mlx-lm: Apple MLX inference — ~130 tok/s on M4 Pro, 3x faster than llama.cpp
+  # ★ 10k GitHub stars | WWDC 2025 endorsed | For fully offline JARVIS
+  "mlx-lm>=0.15.0",
+]
+
+# Optional: heavier document OCR (beyond Apple Vision built-in)
+document-ocr = [
+  # surya-ocr: 83.3% olmOCR-bench, Metal backend via llama.cpp
+  # ★ 21k GitHub stars | Use for PDF/scanned document extraction
+  "surya-ocr>=0.6.0",
+]
+
+# Optional: alternative embeddings with full HuggingFace model access
+sentence-transformers = [
+  "sentence-transformers>=3.0.0",
+]
+
+# Optional: Ollama local model serving (alternative to mlx-lm)
+ollama = [
+  "ollama>=0.3.0",
+]
+
+dev = [
+  "ruff>=0.4.4",
+  "black>=24.4.2",
+  "mypy>=1.10.0",
+  "pre-commit>=3.7.1",
+  "pytest>=8.2.1",
+  "pytest-asyncio>=0.23.7",
+  "pytest-cov>=5.0.0",
+  "pytest-mock>=3.14.0",
+  "pytest-timeout>=2.3.1",
+  "pytest-xdist>=3.5.0",
+  "factory-boy>=3.3.0",
+  "faker>=25.3.0",
+  "respx>=0.21.1",
+  "types-PyYAML>=6.0.12",
+  "types-Pillow>=10.2.0",
+  "types-aiofiles>=23.2.0",
+]
+
+[project.scripts]
+jarvis = "jarvis.main:main"
+jarvis-cli = "jarvis.cli:cli"
+
+[project.urls]
+Repository = "https://github.com/shreyasbhardwaj/jarvis-os"
+Documentation = "https://github.com/shreyasbhardwaj/jarvis-os/tree/main/docs"
+
+# ---------------------------------------------------------------------------
+# Tool Configuration
+# ---------------------------------------------------------------------------
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+# --- Ruff (linter + formatter) ---
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+  "E",    # pycodestyle errors
+  "W",    # pycodestyle warnings
+  "F",    # pyflakes
+  "I",    # isort
+  "B",    # flake8-bugbear
+  "C4",   # flake8-comprehensions
+  "UP",   # pyupgrade
+  "ARG",  # flake8-unused-arguments
+  "SIM",  # flake8-simplify
+  "TCH",  # flake8-type-checking
+  "RUF",  # ruff-specific
+  "ANN",  # flake8-annotations
+  "PT",   # flake8-pytest-style
+  "ASYNC",# flake8-async
+  "S",    # bandit (security)
+  "DTZ",  # datetime timezone
+  "EM",   # flake8-errmsg
+  "TRY",  # tryceratops
+]
+ignore = [
+  "ANN101", # missing self annotation
+  "ANN102", # missing cls annotation
+  "S101",   # assert allowed in tests
+  "TRY003", # long messages in exceptions allowed
+  "EM101",  # string literals in exceptions allowed
+  "EM102",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["ANN", "S", "ARG"]
+"src/jarvis/plugins/examples/**/*.py" = ["ANN"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["jarvis"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+
+# --- Black ---
+[tool.black]
+line-length = 100
+target-version = ["py311", "py312"]
+
+# --- MyPy ---
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+no_implicit_reexport = true
+show_error_codes = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = [
+  # Automation
+  "atomacos.*",
+  "pynput.*",
+  "mss.*",
+  # Vision / OCR
+  "Vision.*",
+  "Quartz.*",
+  "AppKit.*",
+  # Voice
+  "RealtimeSTT.*",
+  "RealtimeTTS.*",
+  "kokoro.*",
+  "edge_tts.*",
+  "sherpa_onnx.*",
+  "sounddevice.*",
+  "soundfile.*",
+  "noisereduce.*",
+  # Vector / Memory
+  "lancedb.*",
+  "fastembed.*",
+  # LLM
+  "litellm.*",
+  "instructor.*",
+  "mlx_lm.*",
+  "ollama.*",
+  # UI
+  "PySide6.*",
+  "pyqtgraph.*",
+  "qasync.*",
+  "pyqtdarktheme.*",
+  # System
+  "rumps.*",
+  "apscheduler.*",
+]
+ignore_missing_imports = true
+
+# --- Pytest ---
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+  "--strict-markers",
+  "--strict-config",
+  "-ra",
+  "--tb=short",
+  "--cov=jarvis",
+  "--cov-report=term-missing",
+  "--cov-report=html:htmlcov",
+  "--cov-fail-under=70",
+]
+markers = [
+  "slow: marks tests as slow (deselect with '-m not slow')",
+  "integration: marks tests as integration tests",
+  "unit: marks tests as unit tests",
+  "voice: marks tests requiring audio hardware",
+  "desktop: marks tests requiring display",
+  "security: marks security-critical tests",
+  "apple_silicon: marks tests requiring Apple Silicon (mlx-lm)",
+]
+filterwarnings = [
+  "error",
+  "ignore::DeprecationWarning:pkg_resources",
+  "ignore::PendingDeprecationWarning",
+]
+
+# --- Coverage ---
+[tool.coverage.run]
+source = ["src/jarvis"]
+omit = [
+  "*/tests/*",
+  "*/migrations/*",
+  "*/__main__.py",
+  "*/plugins/examples/*",
+]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+fail_under = 70
+exclude_lines = [
+  "pragma: no cover",
+  "def __repr__",
+  "if TYPE_CHECKING:",
+  "raise NotImplementedError",
+  "if __name__ == .__main__.:",
+  "@(abc\\.)?abstractmethod",
+  "\\.\\.\\.  # abstract",
+]
