@@ -1,0 +1,10 @@
+#!/bin/bash
+# Run JARVIS commands from the terminal:
+#   ./jarvis chat     — talk to JARVIS
+#   ./jarvis health   — module health check
+#   ./jarvis config   — show configuration
+cd "$(dirname "$0")" || exit 1
+export PATH="$HOME/.local/bin:$PATH"
+export PYTHONPATH="src"
+unset ANTHROPIC_BASE_URL ANTHROPIC_API_BASE
+exec .venv/bin/python -m jarvis.cli "$@"
