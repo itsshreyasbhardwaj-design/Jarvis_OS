@@ -223,7 +223,10 @@ class JarvisOS:
         memory = MemoryManager(settings)
         router = LLMRouter(settings)
         web_search = WebSearch()
-        permissions = PermissionManager(require_confirmation=False, safe_mode=False)
+        permissions = PermissionManager(
+            require_confirmation=settings.security.require_confirmation,
+            safe_mode=settings.security.safe_mode,
+        )
         tools = build_tool_executor(web_search=web_search, permissions=permissions)
         engine = ConversationEngine(router, memory)
         self._agent = JarvisAgent(engine, tools=tools)

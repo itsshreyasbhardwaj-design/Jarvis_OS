@@ -194,9 +194,9 @@ class ToolExecutor:
 
     @staticmethod
     async def _default_confirm(name: str, args: dict[str, Any]) -> bool:
-        """Default confirmation: log and auto-approve (replace with UI dialog)."""
+        """Default confirmation: no UI is connected, so deny by default (fail closed)."""
         logger.warning(
-            f"Auto-confirming tool call: {name}({args}) "
-            "(connect UI confirmation dialog in production)"
+            f"Denying tool call: {name}({args}) "
+            "(no confirmation UI connected — connect one to allow HIGH-risk tools)"
         )
-        return True
+        return False

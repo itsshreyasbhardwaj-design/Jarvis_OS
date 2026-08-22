@@ -103,7 +103,10 @@ def chat() -> None:
         engine = ConversationEngine(router, memory)
         tools = build_tool_executor(
             web_search=WebSearch(),
-            permissions=PermissionManager(require_confirmation=False, safe_mode=False),
+            permissions=PermissionManager(
+                require_confirmation=settings.security.require_confirmation,
+                safe_mode=settings.security.safe_mode,
+            ),
         )
         agent = JarvisAgent(engine, tools=tools)
 

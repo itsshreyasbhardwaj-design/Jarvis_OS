@@ -119,6 +119,8 @@ Desktop.ini
 *.cert
 *.crt
 secrets/
+credentials*.json
+service-account*.json
 
 # --- ChromaDB ---
 chroma_db/
