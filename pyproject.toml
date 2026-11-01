@@ -126,7 +126,7 @@ dependencies = [
   # ★ 4.3k GitHub stars | Powers real-time voice waveform at 60fps
   "pyqtgraph>=0.13.0",
   # qasync: Merge asyncio event loop into Qt — one line of setup
-  "qasync>=0.27.0",
+  "qasync>=0.28.0",
   # pyqtdarktheme: Polished dark stylesheet that syncs with macOS accent color
   "pyqtdarktheme>=2.1.0",
 
